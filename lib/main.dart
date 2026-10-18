@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
 
 void main() {
   runApp(const MyApp());
@@ -14,13 +16,53 @@ const Color blackColor = Color(0xFF1F1F1F);
 
 // MODEL FILM
 class Film {
+  final int id;
   final String title;
   final String genre;
+  final String? posterUrl;
 
   const Film({
+    required this.id,
     required this.title,
     required this.genre,
+    this.posterUrl,
   });
+
+  // Mengubah data JSON TVMaze menjadi objek Film
+  factory Film.fromJson(Map<String, dynamic> json) {
+    final List<dynamic> genres = json['genres'] ?? [];
+    final image = json['image'];
+
+    return Film(
+      id: json['id'] as int,
+      title: json['name'] ?? 'Tanpa Judul',
+      genre: genres.isNotEmpty
+          ? genres.join(', ')
+          : 'Genre tidak tersedia',
+      posterUrl: image?['medium'] as String?,
+    );
+  }
+}
+
+// SERVICE API TVMAZE
+class TvMazeService {
+  static Future<List<Film>> getShows() async {
+    final url = Uri.parse('https://api.tvmaze.com/shows');
+
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+
+      // Hanya mengambil 5 serial pertama
+      return data
+          .take(5)
+          .map((item) => Film.fromJson(item))
+          .toList();
+    } else {
+      throw Exception('Gagal mengambil data dari TVMaze');
+    }
+  }
 }
 
 // ROOT APLIKASI
@@ -50,17 +92,42 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  // DATA FILM SEMENTARA
-  final List<Film> films = const [
-    Film(title: 'JUDUL', genre: 'genre'),
-    Film(title: 'JUDUL', genre: 'genre'),
-    Film(title: 'JUDUL', genre: 'genre'),
-    Film(title: 'JUDUL', genre: 'genre'),
-    Film(title: 'JUDUL', genre: 'genre'),
-  ];
+  // DATA FILM DARI TVMAZE
+  List<Film> films = [];
 
   // FILM YANG DIPILIH
   final Set<int> selectedFilms = {};
+
+  bool isLoading = true;
+  String? errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    loadFilms();
+  }
+
+  // MENGAMBIL DATA SERIAL
+  Future<void> loadFilms() async {
+    try {
+      final result = await TvMazeService.getShows();
+
+      if (!mounted) return;
+
+      setState(() {
+        films = result;
+        isLoading = false;
+        errorMessage = null;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        isLoading = false;
+        errorMessage = 'Gagal memuat serial. Periksa koneksi internet.';
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -78,7 +145,6 @@ class _HomePageState extends State<HomePage> {
       ),
       child: Scaffold(
         backgroundColor: burgundy,
-
         body: SafeArea(
           bottom: false,
           child: Column(
@@ -105,7 +171,38 @@ class _HomePageState extends State<HomePage> {
                       topRight: Radius.circular(30),
                     ),
                   ),
-                  child: ListView.builder(
+                  child: isLoading
+                      ? const Center(
+                    child: CircularProgressIndicator(
+                      color: burgundy,
+                    ),
+                  )
+                      : errorMessage != null
+                      ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          errorMessage!,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: blackColor,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              isLoading = true;
+                            });
+                            loadFilms();
+                          },
+                          child: const Text('Coba Lagi'),
+                        ),
+                      ],
+                    ),
+                  )
+                      : ListView.builder(
                     padding: const EdgeInsets.fromLTRB(
                       24,
                       35,
@@ -122,13 +219,15 @@ class _HomePageState extends State<HomePage> {
                         ),
                         child: FilmCard(
                           film: film,
-                          isSelected: selectedFilms.contains(index),
+                          isSelected:
+                          selectedFilms.contains(film.id),
                           onAdd: () {
                             setState(() {
-                              if (selectedFilms.contains(index)) {
-                                selectedFilms.remove(index);
+                              if (selectedFilms
+                                  .contains(film.id)) {
+                                selectedFilms.remove(film.id);
                               } else {
-                                selectedFilms.add(index);
+                                selectedFilms.add(film.id);
                               }
                             });
                           },
@@ -233,6 +332,26 @@ class FilmCard extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: posterPlaceholder,
                         borderRadius: BorderRadius.circular(28),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(28),
+                        child: film.posterUrl != null
+                            ? Image.network(
+                          film.posterUrl!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (
+                              context,
+                              error,
+                              stackTrace,
+                              ) {
+                            return const ColoredBox(
+                              color: posterPlaceholder,
+                            );
+                          },
+                        )
+                            : const ColoredBox(
+                          color: posterPlaceholder,
+                        ),
                       ),
                     ),
                   ),
