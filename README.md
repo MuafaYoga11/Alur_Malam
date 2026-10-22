@@ -10,7 +10,8 @@ Project ini dibuat sebagai contoh pembelajaran untuk memahami bagaimana aplikasi
 
 Berikut merupakan tampilan aplikasi Alur Malam yang dijalankan menggunakan emulator Android Pixel 10.
 
-![Tampilan Aplikasi Alur Malam](Screenshot_20261022_205004.png)
+[Tampilan Aplikasi Alur Malam](./Screenshot_20261022_205004.png)
+
 
 Aplikasi menggunakan desain antarmuka dengan kombinasi warna burgundy, oranye, dan ivory. Katalog menampilkan poster serial, judul, genre, serta tombol untuk menandai serial yang dipilih.
 
