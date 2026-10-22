@@ -21,7 +21,6 @@ Aplikasi menampilkan:
 - 🏷️ Genre serial
 - 🖼️ Poster serial
 - ➕ Tombol untuk menambahkan serial ke pilihan
-- ✓ Indikator serial yang telah dipilih
 - 🌐 Data serial yang diperoleh langsung dari TVMaze API
 
 ## 🚀 Teknologi yang Digunakan
