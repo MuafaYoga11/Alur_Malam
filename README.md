@@ -17,7 +17,6 @@ Aplikasi menampilkan:
 - 🏷️ Genre serial
 - 🖼️ Poster serial jika tersedia
 - ➕ Tombol untuk menambahkan serial ke pilihan
-- ✓ Indikator serial yang telah dipilih
 - 🌐 Data serial yang diperoleh langsung dari TVMaze API
 
 ## 🚀 Teknologi yang Digunakan
@@ -38,24 +37,24 @@ Data serial diperoleh melalui beberapa tahap:
 
 ```text
 ┌─────────────────┐
-│   Flutter App  │
+│   Flutter App   │
 └────────┬────────┘
          │
          │ HTTP GET
          ▼
 ┌─────────────────┐
-│   TVMaze API   │
+│   TVMaze API    │
 └────────┬────────┘
          │
          │ JSON Response
          ▼
 ┌─────────────────┐
-│   jsonDecode() │
+│   jsonDecode()  │
 └────────┬────────┘
          │
          ▼
 ┌─────────────────┐
-│    Dart Model  │
+│    Dart Model   │
 │      Film       │
 └────────┬────────┘
          │
